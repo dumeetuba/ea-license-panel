@@ -241,14 +241,14 @@
                         External Sync
                     </h2>
                     <div class="form-group">
-                        <label>Database API URL</label>
-                        <input type="text" id="externalUrl" placeholder="https://your-server.com/api/save">
+                        <label>Database API URL (Render)</label>
+                        <input type="text" id="externalUrl" placeholder="https://ea-api.onrender.com">
                     </div>
                     <button class="btn-action btn-sync" onclick="syncToExternal()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
-                        Push Data to External DB
+                        Force Sync Now
                     </button>
-                    <div id="syncLog" class="sync-log">Ready to sync...</div>
+                    <div id="syncLog" class="sync-log">System Ready.</div>
                 </div>
             </aside>
 
@@ -311,6 +311,11 @@
         function loadData() {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) licenses = JSON.parse(stored);
+            
+            // Restore URL from memory if available
+            const savedUrl = localStorage.getItem('ea_api_url');
+            if(savedUrl) document.getElementById('externalUrl').value = savedUrl;
+
             updateStats();
             renderTable();
             generateNewIdPreview();
@@ -360,21 +365,33 @@
             saveData();
             document.getElementById('clientName').value = '';
             generateNewIdPreview();
-            showToast("License Created");
+            showToast("License Created & Synced");
+            
+            // --- AUTOMATIC SYNC ---
+            syncToExternal(true);
         });
 
         // --- ACTIONS ---
         window.toggleStatus = function(id) {
             const l = licenses.find(x => x.id === id);
-            if(l) { l.active = !l.active; saveData(); }
+            if(l) { 
+                l.active = !l.active; 
+                saveData();
+                // --- AUTOMATIC SYNC ---
+                syncToExternal(true);
+            }
         };
+
         window.deleteLicense = function(id) {
             if(confirm("Delete this record permanently?")) {
                 licenses = licenses.filter(x => x.id !== id);
                 saveData();
                 showToast("Record Deleted");
+                // --- AUTOMATIC SYNC ---
+                syncToExternal(true);
             }
         };
+
         window.copyId = function(id) {
             navigator.clipboard.writeText(id);
             showToast("ID Copied");
@@ -389,43 +406,38 @@
             dlAnchorElem.click();
         }
 
-        function syncToExternal() {
+        function syncToExternal(silent = false) {
             const url = document.getElementById('externalUrl').value.trim();
             const log = document.getElementById('syncLog');
             
+            // Save URL for next time
+            localStorage.setItem('ea_api_url', url);
+            
             if (!url) {
-                log.innerHTML = "<span style='color:var(--danger)'>Error: Please enter a URL.</span>";
+                if(!silent) log.innerHTML = "<span style='color:var(--danger)'>⚠️ Please enter your Render URL in the box first!</span>";
                 return;
             }
 
-            log.innerHTML = "Sending data...";
+            if(!silent) log.innerHTML = "Sending data...";
 
-            // Prepare Payload
-            const payload = {
-                timestamp: new Date().toISOString(),
-                count: licenses.length,
-                data: licenses
-            };
-
-            // Send Fetch Request
+            // NOTE: We send 'licenses' directly (Raw Array) to match the Node.js backend code
             fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(licenses)
             })
             .then(response => {
                 if (!response.ok) throw new Error("Server responded with " + response.status);
                 return response.text();
             })
             .then(data => {
-                log.innerHTML = "<span style='color:var(--success)'>✅ Success: Data sent to external DB.</span>";
-                showToast("Sync Successful");
+                log.innerHTML = "<span style='color:var(--success)'>✅ Database Synced Automatically.</span>";
+                if(!silent) showToast("Sync Successful");
             })
             .catch(error => {
                 log.innerHTML = `<span style='color:var(--danger)'>❌ Sync Failed: ${error.message}</span><br><small>Note: Ensure your external server accepts CORS requests.</small>`;
-                showToast("Sync Failed");
             });
         }
 
