@@ -242,7 +242,8 @@
                     </h2>
                     <div class="form-group">
                         <label>Database API URL (Render)</label>
-                        <input type="text" id="externalUrl" placeholder="https://ea-api.onrender.com">
+                        <!-- UPDATED URL HERE -->
+                        <input type="text" id="externalUrl" value="https://ea-api-dwjh.onrender.com">
                     </div>
                     <button class="btn-action btn-sync" onclick="syncToExternal()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
@@ -312,9 +313,12 @@
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) licenses = JSON.parse(stored);
             
-            // Restore URL from memory if available
+            // Restore URL from memory if available (Optional, mostly for future edits)
             const savedUrl = localStorage.getItem('ea_api_url');
-            if(savedUrl) document.getElementById('externalUrl').value = savedUrl;
+            if(savedUrl && savedUrl !== "https://ea-api-dwjh.onrender.com") {
+                 // Only override if user manually changed it to something else
+                 document.getElementById('externalUrl').value = savedUrl;
+            }
 
             updateStats();
             renderTable();
