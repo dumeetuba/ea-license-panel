@@ -3,124 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EA Remote Control Center (Python Backend)</title>
+    <title>EA Remote Control Center</title>
     <style>
-        :root {
-            --bg-body: #0f172a;
-            --bg-panel: #1e293b;
-            --bg-input: #334155;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --border: #334155;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        
-        body { background-color: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
-
-        /* Login Screen */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-body); z-index: 1000;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .login-box {
-            background: var(--bg-panel); padding: 2rem; border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 350px; text-align: center;
-        }
-        .login-box h2 { margin-bottom: 1.5rem; color: var(--primary); }
-        .login-box input { width: 100%; margin-bottom: 1rem; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: white; }
-        .login-box button { width: 100%; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .login-box button:hover { background: var(--primary-hover); }
-
-        /* Main App Layout */
-        aside {
-            width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; padding: 1.5rem;
-        }
-        aside h1 { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 2rem; display: flex; align-items: center; gap: 10px; }
-        aside nav button {
-            background: none; border: none; color: var(--text-muted); width: 100%;
-            text-align: left; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 6px;
-            cursor: pointer; font-size: 0.95rem; transition: 0.2s;
-        }
-        aside nav button:hover, aside nav button.active { background: var(--bg-input); color: var(--text-main); }
-        
-        main { flex: 1; padding: 2rem; overflow-y: auto; }
-
-        /* Dashboard & Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--bg-panel); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--border); }
-        .stat-card h3 { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-card .value { font-size: 2rem; font-weight: 700; }
-        .stat-card.blue .value { color: var(--primary); }
-        .stat-card.green .value { color: var(--success); }
-        .stat-card.red .value { color: var(--danger); }
-
-        /* Toolbar & Table */
-        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-        .btn-primary:hover { background: var(--primary-hover); }
-        .btn-download { background: #10b981; }
-        .btn-copy { padding: 2px 6px; font-size: 0.7rem; margin-left: 5px; background: #475569; border:none; color:white; border-radius:4px; cursor:pointer;}
-        .btn-copy:hover { background: #64748b; }
-        
-        table { width: 100%; border-collapse: collapse; background: var(--bg-panel); border-radius: 10px; overflow: hidden; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background: #253146; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; }
-        tr:hover { background: #253146; }
-        
-        /* Status Badges & Toggles */
-        .status-badge { padding: 0.25rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-        .status-active { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .status-inactive { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        .status-expired { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-
-        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-input); transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(16px); }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 500; display: none;
-            justify-content: center; align-items: center;
-        }
-        .modal { background: var(--bg-panel); padding: 2rem; border-radius: 12px; width: 500px; max-width: 90%; }
-        .modal h2 { margin-bottom: 1.5rem; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
-        .form-group input, .form-group select { width: 100%; padding: 0.7rem; background: var(--bg-input); border: 1px solid var(--border); color: white; border-radius: 6px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; }
-        .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; }
-
-        /* Toast */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; }
-        .toast { background: var(--bg-panel); border-left: 4px solid var(--primary); padding: 1rem; margin-top: 10px; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: space-between; min-width: 300px; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        :root{--bg-body:#0f172a;--bg-panel:#1e293b;--bg-input:#334155;--text-main:#f1f5f9;--text-muted:#94a3b8;--primary:#3b82f6;--primary-hover:#2563eb;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--border:#334155}*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}body{background-color:var(--bg-body);color:var(--text-main);height:100vh;display:flex;overflow:hidden}#login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-body);z-index:1000;display:flex;align-items:center;justify-content:center}.login-box{background:var(--bg-panel);padding:2rem;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.5);width:350px;text-align:center}.login-box h2{margin-bottom:1.5rem;color:var(--primary)}.login-box input{width:100%;margin-bottom:1rem;padding:0.75rem;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:white}.login-box button{width:100%;padding:0.75rem;background:var(--primary);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;transition:0.2s}.login-box button:hover{background:var(--primary-hover)}aside{width:260px;background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem}aside h1{font-size:1.2rem;font-weight:700;color:var(--primary);margin-bottom:2rem;display:flex;align-items:center;gap:10px}aside nav button{background:none;border:none;color:var(--text-muted);width:100%;text-align:left;padding:0.75rem;margin-bottom:0.5rem;border-radius:6px;cursor:pointer;font-size:0.95rem;transition:0.2s}aside nav button:hover,aside nav button.active{background:var(--bg-input);color:var(--text-main)}main{flex:1;padding:2rem;overflow-y:auto}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:2rem}.stat-card{background:var(--bg-panel);padding:1.5rem;border-radius:10px;border:1px solid var(--border)}.stat-card h3{color:var(--text-muted);font-size:0.85rem;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.5px}.stat-card .value{font-size:2rem;font-weight:700}.stat-card.blue .value{color:var(--primary)}.stat-card.green .value{color:var(--success)}.stat-card.red .value{color:var(--danger)}.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.btn-primary{background:var(--primary);color:white;border:none;padding:0.6rem 1.2rem;border-radius:6px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:8px}.btn-primary:hover{background:var(--primary-hover)}.btn-download{background:#10b981}.btn-copy{padding:2px 6px;font-size:0.7rem;margin-left:5px;background:#475569;border:none;color:white;border-radius:4px;cursor:pointer}.btn-copy:hover{background:#64748b}table{width:100%;border-collapse:collapse;background:var(--bg-panel);border-radius:10px;overflow:hidden}th,td{padding:1rem;text-align:left;border-bottom:1px solid var(--border)}th{background:#253146;color:var(--text-muted);font-weight:600;font-size:0.85rem}tr:hover{background:#253146}.status-badge{padding:0.25rem 0.6rem;border-radius:20px;font-size:0.75rem;font-weight:600}.status-active{background:rgba(16,185,129,0.2);color:var(--success)}.status-inactive{background:rgba(239,68,68,0.2);color:var(--danger)}.status-expired{background:rgba(245,158,11,0.2);color:var(--warning)}.switch{position:relative;display:inline-block;width:36px;height:20px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:var(--bg-input);transition:.4s;border-radius:34px}.slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background-color:white;transition:.4s;border-radius:50%}input:checked+.slider{background-color:var(--success)}input:checked+.slider:before{transform:translateX(16px)}.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:500;display:none;justify-content:center;align-items:center}.modal{background:var(--bg-panel);padding:2rem;border-radius:12px;width:500px;max-width:90%}.modal h2{margin-bottom:1.5rem}.form-group{margin-bottom:1rem}.form-group label{display:block;margin-bottom:0.5rem;color:var(--text-muted);font-size:0.9rem}.form-group input,.form-group select{width:100%;padding:0.7rem;background:var(--bg-input);border:1px solid var(--border);color:white;border-radius:6px}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:1.5rem}.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:0.6rem 1.2rem;border-radius:6px;cursor:pointer}#toast-container{position:fixed;bottom:20px;right:20px;z-index:2000}.toast{background:var(--bg-panel);border-left:4px solid var(--primary);padding:1rem;margin-top:10px;border-radius:4px;box-shadow:0 5px 15px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:space-between;min-width:300px;animation:slideIn 0.3s ease}@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
     </style>
 </head>
 <body>
-
-    <!-- Login Screen -->
     <div id="login-screen">
         <div class="login-box">
             <h2>EA Admin Panel</h2>
-            <p style="margin-bottom: 15px; color: #94a3b8; font-size: 0.9rem;">Restricted Access - Enter Password</p>
+            <p style="margin-bottom:15px;color:#94a3b8;font-size:0.9rem">Restricted Access</p>
             <input type="password" id="admin-login-pass" placeholder="Password">
-            <button onclick="attemptLogin()">Access Dashboard</button>
+            <button onclick="_0x4f2a()">Access Dashboard</button>
         </div>
     </div>
-
-    <!-- Sidebar -->
     <aside>
         <h1>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -128,14 +24,12 @@
         </h1>
         <nav>
             <button class="active">Overview</button>
-            <button onclick="toggleConnection()">
-                <span id="conn-status-indicator">●</span> Control Panel Connection
+            <button onclick="_0x9c1e()">
+                <span id="conn-status-indicator">●</span> <span id="conn-text">Control Panel Connection</span>
             </button>
-            <button onclick="logout()" style="margin-top: auto; color: var(--danger);">Logout</button>
+            <button onclick="location.reload()" style="margin-top:auto;color:var(--danger)">Logout</button>
         </nav>
     </aside>
-
-    <!-- Main Content -->
     <main>
         <div class="stats-grid">
             <div class="stat-card blue">
@@ -151,22 +45,19 @@
                 <div class="value" id="stat-off">0</div>
             </div>
         </div>
-
         <div class="toolbar">
             <h2>Client List</h2>
-            <div style="display:flex; gap:10px;">
-                <!-- DOWNLOAD REMAINS AS BACKUP -->
-                <button class="btn-primary btn-download" onclick="downloadJSON()">
+            <div style="display:flex;gap:10px">
+                <button class="btn-primary btn-download" onclick="_0x3e9b()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Backup DB
                 </button>
-                <button class="btn-primary" onclick="openModal()">
+                <button class="btn-primary" onclick="_0x8a2f()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Add New License
                 </button>
             </div>
         </div>
-
         <table>
             <thead>
                 <tr>
@@ -178,315 +69,260 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="client-table-body">
-                <!-- Rows inserted by JS -->
-            </tbody>
+            <tbody id="client-table-body"></tbody>
         </table>
     </main>
-
-    <!-- Modal for Add/Edit -->
     <div class="modal-overlay" id="client-modal">
         <div class="modal">
             <h2 id="modal-title">Add New License</h2>
-            <div class="form-group">
-                <label>Client Name</label>
-                <input type="text" id="inp-name" placeholder="e.g. John Doe">
-            </div>
-            <div class="form-group">
-                <label>MT5 Account Number</label>
-                <input type="number" id="inp-account" placeholder="e.g. 88123456">
-            </div>
+            <div class="form-group"><label>Client Name</label><input type="text" id="inp-name" placeholder="e.g. John Doe"></div>
+            <div class="form-group"><label>MT5 Account Number</label><input type="number" id="inp-account" placeholder="e.g. 88123456"></div>
             <div class="form-group">
                 <label>Password</label>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="inp-password" placeholder="Generated automatically">
-                    <button class="btn-primary" style="padding: 0.5rem;" onclick="generateRandomPass()">Gen</button>
-                </div>
+                <div style="display:flex;gap:5px"><input type="text" id="inp-password"><button class="btn-primary" style="padding:0.5rem" onclick="_0x7d1c()">Gen</button></div>
             </div>
-            <div class="form-group">
-                <label>Expiry Date</label>
-                <input type="date" id="inp-expiry">
-            </div>
+            <div class="form-group"><label>Expiry Date</label><input type="date" id="inp-expiry"></div>
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-                <button class="btn-primary" onclick="saveClient()">Save License</button>
+                <button class="btn-cancel" onclick="document.getElementById('client-modal').style.display='none'">Cancel</button>
+                <button class="btn-primary" onclick="_0x2b4a()">Save License</button>
             </div>
         </div>
     </div>
-
-    <!-- Toast Container -->
     <div id="toast-container"></div>
 
     <script>
-    // --- CONFIGURATION ---
-    const PYTHON_API_URL = "https://license-server-d6pt.onrender.com"; 
-    
-    // --- HYBRID DATA MANAGEMENT ---
-    let clients = JSON.parse(localStorage.getItem('ea_clients_local')) || [];
-    let isConnectionEnabled = true; // Default: Allow sending data to Python
-
-    // --- AUTH ---
-    function attemptLogin() {
-        const pass = document.getElementById('admin-login-pass').value;
-        const encodedPass = "Qmxlc3NlZC04OC1i"; 
-        if(pass === atob(encodedPass)) {
-            document.getElementById('login-screen').style.display = 'none';
-            loadClients(); 
-            showToast('Welcome back, Admin.', 'success');
-        } else {
-            showToast('Access Denied: Invalid Password', 'error');
+        // OBFUSCATED LOGIC
+        // Decoded strings and variables are mapped below to prevent simple reading
+        var _0x5a2f = ['c3RhdHVzLWV4cGlyZWQ=', 'c3RhdHVzLWluYWN0aXZl', 'c3RhdHVzLWFjdGl2ZQ==', 'Z2V0RWxlbWVudHNCeVRhZ05hbWU=', 'aHR0cHM6Ly9saWNlbnNlLXNlcnZlci1kNnB0Lm9ucmVuZGVyLmNvbQ==', 'bG9hZA==', 'cGFyc2U=', 'Z2V0SXRlbQ==', 'ZWFfY2xpZW50c19sb2NhbA==', 'c3RyaW5naWZ5', 'cG9zdA==', 'c2F2ZV9jbGllbnRz', 'Z2V0X2NsaWVudHM=', 'anNvbg==', 'c3VjY2Vzcw==', 'd2FybmluZw==', 'ZXJyb3I=', 'SW52YWxpZCBQYXNzd29yZA==', 'QWNjZXNzIERlbmllZA==', 'TG9jYWwgU3RvcmFnZSBFcnJvcg=='];
+        
+        // Helper to decode Base64 strings used in the app
+        function _0x9d4e(val) {
+            return atob(_0x5a2f[val]);
         }
-    }
-    function logout() { location.reload(); }
 
-    // --- CONNECTION CONTROL ---
-    function toggleConnection() {
-        isConnectionEnabled = !isConnectionEnabled;
-        
-        // Update UI
-        const indicator = document.getElementById('conn-status-indicator');
-        const btnText = document.querySelector('#conn-status-indicator').parentNode;
-        
-        if(isConnectionEnabled) {
-            indicator.style.color = 'var(--success)';
-            btnText.innerText = 'Control Panel: Online';
-            btnText.style.color = 'var(--success)';
-        } else {
-            indicator.style.color = 'var(--danger)';
-            btnText.innerText = 'Control Panel: Offline';
-            btnText.style.color = 'var(--danger)';
-        }
-        
-        // Save state to LocalStorage
-        localStorage.setItem('ea_connection_state', JSON.stringify({ enabled: isConnectionEnabled }));
-        
-        renderTable();
-    }
+        // --- CORE VARIABLES ---
+        const PYTHON_API_URL = _0x9d4e(4); // Decodes to your API URL
+        let clients = JSON.parse(localStorage.getItem(_0x9d4e(8))) || [];
+        let isConnectionEnabled = true;
+        let editingIndex = -1;
 
-    // --- SAVE LOCALLY (Immediate & Permanent) ---
-    function saveDataLocal() {
-        localStorage.setItem('ea_clients_local', JSON.stringify(clients));
-        renderTable();
-    }
-
-    // --- SYNC TO PYTHON (Best Effort) ---
-    async function saveToPython() {
-        if(!isConnectionEnabled) {
-            console.log("Skipping Python sync (Offline Mode).");
-            showToast('Saved locally (Connection Disabled).', 'warning');
-            return;
-        }
-        try {
-            const response = await fetch(`${PYTHON_API_URL}/save_clients`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(clients)
-            });
-            
-            showToast('Data synced to server.', 'success'); 
-            
-        } catch (error) {
-            console.error("Network Error:", error);
-            showToast('Network Error. Saved to Local Storage.', 'warning');
-        }
-    }
-
-    // --- LOAD CLIENTS (Hybrid Logic) ---
-    async function loadClients() {
-        // Load data from Python
-        if(isConnectionEnabled) {
-            try {
-                const response = await fetch(`${PYTHON_API_URL}/get_clients`);
-                if (response.ok) {
-                    const serverClients = await response.json();
-                    // Merge or update local based on server data?
-                    // For simplicity, we take server data if it exists.
-                    clients = serverClients;
-                    console.log("Data loaded from Python.");
-                } else {
-                    console.warn("Server unreachable. Using local storage.");
-                    showToast('Server unreachable. Using local storage.', 'error');
-                }
-            } catch (error) {
-                console.error("Fetch failed:", error);
-            }
-        }
-        
-        renderTable();
-    }
-
-    // --- UI LOGIC ---
-
-    function renderTable() {
-        const tbody = document.getElementById('client-table-body');
-        tbody.innerHTML = '';
-        
-        let activeCount = 0;
-        let offCount = 0;
-
-        clients.forEach((c, index) => {
-            const tr = document.createElement('tr');
-            
-            const isExpired = new Date(c.expiry) < new Date();
-            let statusClass = 'status-active';
-            let statusText = 'Active';
-            
-            if (!c.enabled) {
-                statusClass = 'status-inactive';
-                statusText = 'Switched Off';
-                offCount++;
-            } else if (isExpired) {
-                statusClass = 'status-expired';
-                statusText = 'Expired';
+        // --- AUTH SYSTEM ---
+        function _0x4f2a() {
+            var _0x2e1b = document.getElementById('admin-login-pass').value;
+            // Encoded Check: 'Qmxlc3NlZC04OC1i' is "Blessed-88-b"
+            if(_0x2e1b === atob('Qmxlc3NlZC04OC1i')) {
+                document.getElementById('login-screen').style.display = 'none';
+                _0x1c5a();
+                _0x6f9b('Welcome back, Admin.', _0x9d4e(14));
             } else {
-                activeCount++;
+                _0x6f9b(_0x9d4e(17), _0x9d4e(16));
+            }
+        }
+
+        // --- DATA MANAGEMENT ---
+        function _0x1c5a() {
+            if(isConnectionEnabled) {
+                fetch(PYTHON_API_URL + '/' + _0x9d4e(11))
+                .then(res => {
+                    if(res.ok) return res[_0x9d4e(7)]();
+                    throw new Error(_0x9d4e(18));
+                })
+                .then(data => {
+                    clients = data;
+                    _0x5e2b();
+                })
+                .catch(err => {
+                    console.warn(err);
+                    _0x6f9b('Server unreachable. Using local cache.', _0x9d4e(15));
+                });
+            } else {
+                _0x5e2b();
+            }
+        }
+
+        async function _0x3a2c() {
+            localStorage.setItem(_0x9d4e(8), JSON[_0x9d4e(9)](clients));
+            if(isConnectionEnabled) {
+                try {
+                    await fetch(PYTHON_API_URL + '/' + _0x9d4e(10), {
+                        method: _0x9d4e(12),
+                        headers: { 'Content-Type': _0x9d4e(13) },
+                        body: JSON[_0x9d4e(9)](clients)
+                    });
+                    _0x6f9b('Data synced.', _0x9d4e(14));
+                } catch(e) {
+                    _0x6f9b('Network Error. Saved locally.', _0x9d4e(15));
+                }
+            }
+        }
+
+        // --- CONNECTION TOGGLE ---
+        function _0x9c1e() {
+            isConnectionEnabled = !isConnectionEnabled;
+            var _0x7d1a = document.getElementById('conn-status-indicator');
+            var _0x8b3c = document.getElementById('conn-text');
+            if(isConnectionEnabled) {
+                _0x7d1a.style.color = 'var(--success)';
+                _0x8b3c.innerText = 'Control Panel: Online';
+                _0x8b3c.style.color = 'var(--success)';
+            } else {
+                _0x7d1a.style.color = 'var(--danger)';
+                _0x8b3c.innerText = 'Control Panel: Offline';
+                _0x8b3c.style.color = 'var(--danger)';
+            }
+            _0x3a2c();
+            _0x5e2b();
+        }
+
+        // --- UI RENDER ---
+        function _0x5e2b() {
+            const _0x1c5b = document.getElementById('client-table-body');
+            _0x1c5b.innerHTML = '';
+            let _0xa1f = 0, _0xb2e = 0;
+            
+            clients.forEach((_0x4e2a, _0x5d3c) => {
+                const _0x6f1a = new Date(_0x4e2a.expiry) < new Date();
+                let _0x7d2c = _0x9d4e(2); 
+                let _0x8e3d = 'Active';
+                
+                if(!_0x4e2a.enabled) {
+                    _0x7d2c = _0x9d4e(1); _0x8e3d = 'Switched Off'; _0xb2e++;
+                } else if(_0x6f1a) {
+                    _0x7d2c = _0x9d4e(0); _0x8e3d = 'Expired';
+                } else {
+                    _0xa1f++;
+                }
+
+                const _0x9f4b = document.createElement('tr');
+                _0x9f4b.innerHTML = `
+                    <td>
+                        <div style="font-weight:600">${_0x4e2a.name}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted)">${_0x4e2a.account}</div>
+                    </td>
+                    <td>
+                        <code style="background:#334155;padding:2px 5px;border-radius:4px">${_0x4e2a.password}</code>
+                        <button class="btn-copy" onclick="navigator.clipboard.writeText('${_0x4e2a.password}')">Copy</button>
+                    </td>
+                    <td>${_0x4e2a.expiry}</td>
+                    <td><span class="status-badge ${_0x7d2c}">${_0x8e3d}</span></td>
+                    <td>
+                        <label class="switch">
+                            <input type="checkbox" ${_0x4e2a.enabled ? 'checked' : ''} onchange="_0x1e9c(${_0x5d3c})">
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                    <td>
+                        <button class="btn-primary" style="padding:4px 8px;font-size:0.8rem" onclick="_0x2c9d(${_0x5d3c})">Edit</button>
+                        <button class="btn-cancel" style="color:var(--danger);border:none;margin-left:5px;cursor:pointer" onclick="_0x4d8e(${_0x5d3c})">✕</button>
+                    </td>`;
+                _0x1c5b.appendChild(_0x9f4b);
+            });
+            document.getElementById('stat-total').innerText = clients.length;
+            document.getElementById('stat-active').innerText = _0xa1f;
+            document.getElementById('stat-off').innerText = _0xb2e;
+        }
+
+        // --- INTERACTIONS ---
+        async function _0x1e9c(_0x3d2c) {
+            clients[_0x3d2c].enabled = !clients[_0x3d2c].enabled;
+            await _0x3a2c();
+            _0x5e2b();
+        }
+
+        function _0x4d8e(_0x4d1a) {
+            if(confirm('Delete this license?')) {
+                clients.splice(_0x4d1a, 1);
+                _0x3a2c();
+                _0x5e2b();
+            }
+        }
+
+        function _0x8a2f() {
+            editingIndex = -1;
+            document.getElementById('modal-title').innerText = 'Add New License';
+            document.getElementById('inp-name').value = '';
+            document.getElementById('inp-account').value = '';
+            document.getElementById('inp-password').value = '';
+            document.getElementById('inp-expiry').value = '';
+            document.getElementById('client-modal').style.display = 'flex';
+        }
+
+        function _0x2c9d(_0x5a2f) {
+            editingIndex = _0x5a2f;
+            const c = clients[_0x5a2f];
+            document.getElementById('modal-title').innerText = 'Edit License';
+            document.getElementById('inp-name').value = c.name;
+            document.getElementById('inp-account').value = c.account;
+            document.getElementById('inp-password').value = c.password;
+            document.getElementById('inp-expiry').value = c.expiry;
+            document.getElementById('client-modal').style.display = 'flex';
+        }
+
+        function _0x7d1c() {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let pass = "";
+            for(let i=0; i<8; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('inp-password').value = pass;
+        }
+
+        async function _0x2b4a() {
+            const name = document.getElementById('inp-name').value;
+            const account = document.getElementById('inp-account').value;
+            const password = document.getElementById('inp-password').value;
+            const expiry = document.getElementById('inp-expiry').value;
+
+            if(!name || !account || !password || !expiry) {
+                _0x6f9b('Fill all fields', _0x9d4e(16));
+                return;
             }
 
-            tr.innerHTML = `
-                <td>
-                    <div style="font-weight:600">${c.name}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted)">${c.account}</div>
-                </td>
-                <td>
-                    <code id="pass-${index}" style="background:#334155; padding:2px 5px; border-radius:4px;">${c.password}</code>
-                    <button class="btn-copy" onclick="copyToClipboard('${c.password}')">Copy</button>
-                </td>
-                <td>${c.expiry}</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>
-                    <label class="switch">
-                        <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="toggleSwitch(${index})">
-                        <span class="slider"></span>
-                    </label>
-                </td>
-                <td>
-                    <button class="btn-primary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="editClient(${index})">Edit</button>
-                    <button class="btn-cancel" style="color: var(--danger); border:none; margin-left:5px; cursor:pointer;" onclick="deleteClient(${index})">✕</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        document.getElementById('stat-total').innerText = clients.length;
-        document.getElementById('stat-active').innerText = activeCount;
-        document.getElementById('stat-off').innerText = offCount;
-    }
-
-    // --- TOGGLE SWITCH ---
-    async function toggleSwitch(index) {
-        // Update LocalStorage immediately
-        clients[index].enabled = !clients[index].enabled;
-        saveDataLocal(); 
-        
-        // Sync to Python if enabled
-        await saveToPython();
-    }
-
-    function deleteClient(index) {
-        if(confirm('Delete this license permanently?')) {
-            clients.splice(index, 1);
-            saveDataLocal(); // Save local
-            saveToPython(); // Sync remote
-            renderTable();
-        }
-    }
-
-    function openModal() {
-        editingIndex = -1;
-        document.getElementById('modal-title').innerText = 'Add New License';
-        document.getElementById('inp-name').value = '';
-        document.getElementById('inp-account').value = '';
-        document.getElementById('inp-password').value = '';
-        document.getElementById('inp-expiry').value = '';
-        document.getElementById('client-modal').style.display = 'flex';
-    }
-
-    function editClient(index) {
-        editingIndex = index;
-        const c = clients[index];
-        document.getElementById('modal-title').innerText = 'Edit License';
-        document.getElementById('inp-name').value = c.name;
-        document.getElementById('inp-account').value = c.account;
-        document.getElementById('inp-password').value = c.password;
-        document.getElementById('inp-expiry').value = c.expiry;
-        document.getElementById('client-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('client-modal').style.display = 'none';
-    }
-
-    function generateRandomPass() {
-        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        let pass = "";
-        for(let i=0; i<8; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
-        document.getElementById('inp-password').value = pass;
-    }
-
-    async function saveClient() {
-        const name = document.getElementById('inp-name').value;
-        const account = document.getElementById('inp-account').value;
-        const password = document.getElementById('inp-password').value;
-        const expiry = document.getElementById('inp-expiry').value;
-
-        if(!name || !account || !password || !expiry) {
-            showToast('Please fill all fields', 'error');
-            return;
+            const _0x1c2a = { name, account, password, expiry, enabled: true };
+            
+            if(editingIndex > -1) {
+                _0x1c2a.enabled = clients[editingIndex].enabled;
+                clients[editingIndex] = _0x1c2a;
+            } else {
+                clients.push(_0x1c2a);
+            }
+            
+            await _0x3a2c();
+            document.getElementById('client-modal').style.display = 'none';
+            _0x5e2b();
         }
 
-        const clientData = {
-            name, account, password, expiry, enabled: true
-        };
-
-        if(editingIndex > -1) {
-            // Preserve current enabled state when editing
-            clientData.enabled = clients[editingIndex].enabled;
-            clients[editingIndex] = clientData;
-            showToast('License updated successfully', 'success');
-        } else {
-            clients.push(clientData);
-            showToast('New license created', 'success');
+        function _0x3e9b() {
+            const _0x8a2f = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients, null, 2));
+            const _0x1c5a = document.createElement('a');
+            _0x1c5a.href = _0x8a2f;
+            _0x1c5a.download = "license-db.json";
+            document.body.appendChild(_0x1c5a);
+            _0x1c5a.click();
+            _0x1c5a.remove();
+            _0x6f9b('Backup downloaded', 'success');
         }
 
-        // Save Local (Instant)
-        saveDataLocal();
-        
-        // Sync Remote
-        await saveToPython();
-        
-        closeModal();
-    }
+        function _0x6f9b(msg, type) {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.style.borderLeftColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--primary)';
+            t.innerText = msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
 
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('Password copied!', 'success');
-        });
-    }
-
-    function downloadJSON() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(clients, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "license-db.json");
-        document.body.appendChild(downloadAnchorNode); 
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-        showToast('Backup file downloaded!', 'success');
-    }
-
-    function showToast(msg, type='info') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.style.borderLeftColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--primary)';
-        toast.innerText = msg;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    function showApiHelp() {
-        alert("SYSTEM STATUS: HYBRID MODE\n\n1. 'Control Panel Connection' Toggle (Sidebar):\n   ON: Admin Panel can control EA (Switch On/Off).\n   OFF: EA enters Fail-Safe Mode (No Trading).\n\n2. EA checks Admin Panel status via 'Heartbeat'.\n   If Status is Online -> EA works normally.\n   If Status is Offline -> EA stops trading (if Allow Offline Mode is OFF).");
-    }
-</script>
+        // Anti-Debug / Integrity Check (Simple Deterrent)
+        setInterval(function(){
+            const devtools = /./;
+            devtools.toString = function() {
+                this.opened = true;
+            }
+            console.log('%c', devtools);
+            if(devtools.opened) {
+                // Optional: Redirect or obscure content if DevTools are detected
+                // document.body.innerHTML = '<h1 style="text-align:center;margin-top:20%">Security Alert: Inspection Disabled</h1>';
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
